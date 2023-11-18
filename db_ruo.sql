@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 17 Nov 2023 pada 17.22
+-- Waktu pembuatan: 18 Nov 2023 pada 14.15
 -- Versi server: 10.4.27-MariaDB
 -- Versi PHP: 8.2.0
 
@@ -29,8 +29,18 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `chatterry` (
   `id_chat` int(11) NOT NULL,
-  `pertanyaan` longtext NOT NULL
+  `pertanyaan` longtext NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `chatterry`
+--
+
+INSERT INTO `chatterry` (`id_chat`, `pertanyaan`, `created_at`, `updated_at`) VALUES
+(1, 'Halo....\n\nSalam kenal ya aku Terry, sahabat yang akan membantu mu di RUO\n\nGimana kabar mu hari ini?', '2023-11-18 05:40:34', '2023-11-18 05:40:34'),
+(2, 'Terry pernah dengar, pelangi nggak abadi. Tapi senyum kamu harus selalu abadi ya...', '2023-11-18 05:40:34', '2023-11-18 05:40:34');
 
 -- --------------------------------------------------------
 
@@ -75,6 +85,14 @@ CREATE TABLE `hideaccount` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data untuk tabel `hideaccount`
+--
+
+INSERT INTO `hideaccount` (`id_hide`, `status_hide`, `created_at`, `updated_at`) VALUES
+(1, 'Disembunyikan', '2023-11-18 09:47:40', '2023-11-18 09:47:40'),
+(2, 'Ditampilkan', '2023-11-18 09:47:46', '2023-11-18 09:47:46');
+
 -- --------------------------------------------------------
 
 --
@@ -111,14 +129,6 @@ CREATE TABLE `therapy` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data untuk tabel `therapy`
---
-
-INSERT INTO `therapy` (`id_therapy`, `foto_psikolog`, `nama_psikolog`, `lama_karir`, `no_telp_psikolog`, `medsos_psikolog`, `like`, `dislike`, `spesialis_psikolog`, `id_user`, `created_at`, `updated_at`) VALUES
-(2, 'Pahlawan Indonesia, Bro Tomo, Pahlawan Indonesia, Indonesia PNG dan Vektor dengan Background Transparan untuk Unduh Gratis.jpeg', 'nadini2', 1, '08228342656', 'diniii', 0, 0, 'kedokterwan jiwa banget', 3, '2023-11-17 14:21:18', '2023-11-17 15:39:04'),
-(4, 'kebun teh.jpeg', 'dia', 12, '23234234', 'diadia', 0, 0, 'dokter jiwa', 2, '2023-11-17 16:13:12', '2023-11-17 16:13:12');
-
 -- --------------------------------------------------------
 
 --
@@ -127,6 +137,7 @@ INSERT INTO `therapy` (`id_therapy`, `foto_psikolog`, `nama_psikolog`, `lama_kar
 
 CREATE TABLE `user` (
   `id_user` int(11) NOT NULL,
+  `foto_user` varchar(255) DEFAULT NULL,
   `username` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -136,15 +147,6 @@ CREATE TABLE `user` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data untuk tabel `user`
---
-
-INSERT INTO `user` (`id_user`, `username`, `email`, `password`, `phone`, `medsos`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'nadini', 'nadini@gmail.com', '$2b$10$X5.3DV5G5xDb9WQV/yBiWuIb7BWPdDmAIJRf8kNlvmndzP3Y60GNW', NULL, NULL, NULL, '2023-11-17 13:42:54', '2023-11-17 14:12:14'),
-(2, 'nadila', 'nadila@gmail.com', '$2b$10$wkuNnT2gsSlYz0hdrFPNM.pER1SWjPb6Dtp8LoQuo6wulZFLS0HO.', NULL, NULL, NULL, '2023-11-17 13:43:18', '2023-11-17 13:43:18'),
-(3, 'nadila12', 'nadila12@gmail.com', '$2b$10$Yx/nvK6gQU/2VCNPp2Xfbeo2K6d/PadZaiY5JSTs643nQ.GV3oZhi', NULL, NULL, NULL, '2023-11-17 13:48:13', '2023-11-17 13:48:13');
 
 --
 -- Indexes for dumped tables
@@ -207,7 +209,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT untuk tabel `chatterry`
 --
 ALTER TABLE `chatterry`
-  MODIFY `id_chat` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_chat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT untuk tabel `chatuser`
@@ -225,7 +227,7 @@ ALTER TABLE `comment`
 -- AUTO_INCREMENT untuk tabel `hideaccount`
 --
 ALTER TABLE `hideaccount`
-  MODIFY `id_hide` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_hide` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT untuk tabel `message`
@@ -237,13 +239,13 @@ ALTER TABLE `message`
 -- AUTO_INCREMENT untuk tabel `therapy`
 --
 ALTER TABLE `therapy`
-  MODIFY `id_therapy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_therapy` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT untuk tabel `user`
 --
 ALTER TABLE `user`
-  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
