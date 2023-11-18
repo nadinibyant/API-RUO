@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const controllers = {}
 
+
+//register
 const register = async (req, res) => {
     const username = req.body.username
     const email = req.body.email
@@ -63,6 +65,7 @@ const register = async (req, res) => {
 }
 controllers.register = register
 
+//login
 const login = async (req, res) => {
     const username = req.body.username
     const password = req.body.password

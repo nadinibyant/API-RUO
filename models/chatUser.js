@@ -40,7 +40,7 @@ const ChatUser = sequelize.define('chatuser', {
         allowNull: false
     }
 }, {
-    tableName: 'hideaccound',
+    tableName: 'chatuser',
     createdAt: 'created_at',
     updatedAt: 'updated_at',
     timestamps: true

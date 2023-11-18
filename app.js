@@ -25,6 +25,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', server.users);
 app.use('/', server.therapy)
+app.use('/', server.chatTerry)
+app.use('/', server.profile)
+app.use('/', server.message)
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     res.status(400).json({

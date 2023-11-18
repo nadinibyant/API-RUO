@@ -1,5 +1,6 @@
 const response = require('express')
 const Therapy = require('../models/therapy')
+const User = require('../models/users')
 const controllers = {}
 const jwt = require('jsonwebtoken')
 const multer = require('multer')
@@ -31,6 +32,7 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+//tampil seluruh data therapy orang
 const allTherapy = async (req, res) => {
     const getAllTherapy = await Therapy.findAll()
     if (getAllTherapy.length > 0) {
@@ -48,25 +50,35 @@ const allTherapy = async (req, res) => {
 }
 controllers.allTherapy = [verifyToken, allTherapy]
 
+// tampil seluruh therapy sendiri
 const myTherapy = async (req, res) => {
     const id_user = req.session.id_user
-    const getMyTherapy = await Therapy.findAll({
-        where: {
-            id_user: id_user
-        }
-    })
-    if (getMyTherapy.length > 0) {
-        res.status(200).json({
-            success: true,
-            message: ' Therapy Data Found',
-            myTherapy: getMyTherapy
+    const findUser = await User.findByPk(id_user)
+    if (findUser) {
+        const getMyTherapy = await Therapy.findAll({
+            where: {
+                id_user: id_user
+            }
         })
+        if (getMyTherapy.length > 0) {
+            res.status(200).json({
+                success: true,
+                message: ' Therapy Data Found',
+                myTherapy: getMyTherapy
+            })
+        } else {
+            res.status(400).json({
+                success: false,
+                message: 'Therapy Data not Found'
+            })
+        }
     } else {
         res.status(400).json({
             success: false,
-            message: 'Therapy Data not Found'
+            message: 'Session Expired'
         })
     }
+    
 }
 controllers.myTherapy = [verifyToken, myTherapy]
 
@@ -95,59 +107,71 @@ const upload = multer({
 });
 const uploadd = upload.single('file')
 
+//tambah data therapy
 const addTherapy = async (req, res) => {
     const id_user = req.session.id_user
-    const foto_psikolog = req.file
-    const nama_psikolog = req.body.nama_psikolog
-    const lama_karir = req.body.lama_karir
-    const no_telp_psikolog = req.body.no_telp_psikolog
-    const medsos_psikolog = req.body.medsos_psikolog
-    const spesialis_psikolog = req.body.spesialis_psikolog
-
-    if (!foto_psikolog || !nama_psikolog || !lama_karir || !no_telp_psikolog || !medsos_psikolog || !spesialis_psikolog) {
-        res.status(400).json({
-            success: false,
-            message: 'Complete the therapy data you want to add'
-        })
-    } else {
-        const findTherapy = await Therapy.findOne({
-            where: {
-                nama_psikolog: nama_psikolog
-            }
-        })
-
-        if (findTherapy) {
+    const findUser = await User.findByPk(id_user)
+    if (findUser) {
+        const foto_psikolog = req.file
+        const nama_psikolog = req.body.nama_psikolog
+        const lama_karir = req.body.lama_karir
+        const no_telp_psikolog = req.body.no_telp_psikolog
+        const medsos_psikolog = req.body.medsos_psikolog
+        const spesialis_psikolog = req.body.spesialis_psikolog
+    
+        if (!foto_psikolog || !nama_psikolog || !lama_karir || !no_telp_psikolog || !medsos_psikolog || !spesialis_psikolog) {
             res.status(400).json({
                 success: false,
-                message: `Therapy data with that name ${nama_psikolog} has been added`
+                message: 'Complete the therapy data you want to add'
             })
         } else {
-            const addTherapy = await Therapy.create({
-                foto_psikolog: foto_psikolog.originalname,
-                nama_psikolog: nama_psikolog,
-                lama_karir: lama_karir,
-                no_telp_psikolog: no_telp_psikolog,
-                medsos_psikolog: medsos_psikolog,
-                spesialis_psikolog: spesialis_psikolog,
-                id_user: id_user
+            const findTherapy = await Therapy.findOne({
+                where: {
+                    nama_psikolog: nama_psikolog
+                }
             })
-
-            if (addTherapy) {
-                res.status(200).json({
-                    success: true,
-                    message: 'Therapy data added successfully'
-                })
-            } else {
+    
+            if (findTherapy) {
                 res.status(400).json({
                     success: false,
-                    message: 'Therapy data was not added successfully'
+                    message: `Therapy data with that name ${nama_psikolog} has been added`
                 })
+            } else {
+                const addTherapy = await Therapy.create({
+                    foto_psikolog: foto_psikolog.originalname,
+                    nama_psikolog: nama_psikolog,
+                    lama_karir: lama_karir,
+                    no_telp_psikolog: no_telp_psikolog,
+                    medsos_psikolog: medsos_psikolog,
+                    spesialis_psikolog: spesialis_psikolog,
+                    id_user: id_user
+                })
+    
+                if (addTherapy) {
+                    res.status(200).json({
+                        success: true,
+                        message: 'Therapy data added successfully'
+                    })
+                } else {
+                    res.status(400).json({
+                        success: false,
+                        message: 'Therapy data was not added successfully'
+                    })
+                }
             }
         }
+    } else {
+        res.status(400).json({
+            success: false,
+            message: 'Session Expired'
+        })
     }
+   
 }
 controllers.addTherapy = [verifyToken, uploadd, addTherapy]
 
+
+//edit data therapy
 const editTherapy = async (req, res) => {
     const id_therapy = req.params.id_therapy
     const findTherapy = await Therapy.findOne({
@@ -204,6 +228,7 @@ const editTherapy = async (req, res) => {
 }
 controllers.editTherapy = [verifyToken, uploadd, editTherapy]
 
+//hapus data therapy
 const deleteTherapy = async (req, res) => {
     const id_therapy = req.params.id_therapy
     const findTherapy = await Therapy.findOne({
@@ -238,6 +263,7 @@ const deleteTherapy = async (req, res) => {
 }
 controllers.deleteTherapy = [verifyToken, deleteTherapy]
 
+//tampil detail data therapy yg dipilih
 const detailTherapy = async (req, res) => {
     const id_therapy = req.params.id_therapy
     const findTherapy = await Therapy.findOne({
@@ -261,6 +287,7 @@ const detailTherapy = async (req, res) => {
 }
 controllers.detailTherapy = [verifyToken, detailTherapy]
 
+//tambah like
 const like = async (req, res) => {
     const id_therapy = req.params.id_therapy
     const findTherapy = await Therapy.findOne({
@@ -301,6 +328,7 @@ const like = async (req, res) => {
 }
 controllers.like = [verifyToken, like]
 
+//tambah dislike
 const dislike = async (req, res) => {
     const id_therapy = req.params.id_therapy
     const findTherapy = await Therapy.findOne({
@@ -341,6 +369,7 @@ const dislike = async (req, res) => {
 }
 controllers.dislike = [verifyToken, dislike]
 
+//hapus therapy jika dislike > 10
 const deleteOtomatic = async (req,res) => {
     const delTherapy = await Therapy.destroy({
         where:{
