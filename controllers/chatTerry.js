@@ -24,17 +24,6 @@ const verifyToken = (req, res, next) => {
         });
     }
     next();
-
-    // try {
-    //     const decoded = jwt.verify(token, "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpbmlkaW5pQGdtYWlsLmNvbSIsInBhc3N3b3JkIjoiMTIzNDUiLCJpYXQiOjE2ODE4OTI3MjAsImV4cCI6MTY4MTg5NDUyMH0.YMp71HNEhBCNG3q-AXoVVhtJadaog6tcJIHWmLRxnx");
-    //     req.user = decoded.id_user;
-    //     next();
-    // } catch (error) {
-    //     return res.status(401).json({
-    //         success: false,
-    //         message: 'Unauthorized: Invalid token'
-    //     });
-    // }
 };
 
 // tampil pertanyaan
@@ -96,7 +85,7 @@ controllers.answeQuest1 = [verifyToken, answeQuest1]
 
 //jawab pertanyaan 2
 const answeQuest2 = async (req, res) => {
-    const id_user = req.session.id_user
+    const id_user = req.params.id_user
     const findUser = await User.findByPk(id_user)
     if (findUser) {
         const answer2 = req.body.answer2

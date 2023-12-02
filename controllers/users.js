@@ -130,7 +130,7 @@ controllers.login = login
 const forgetPassword = async (req,res) => {
     const email = req.body.email
     const newPass = req.body.newPass
-    const confNewPass = req.body.newPass
+    const confNewPass = req.body.confNewPass
 
     if (!email || !newPass || !confNewPass) {
         res.status(400).json({
