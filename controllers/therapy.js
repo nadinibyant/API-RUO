@@ -88,25 +88,14 @@ const storage = multer.diskStorage({
     }
 })
 
-const fileFilter = function (req, file, cb) {
-    const allowedTypes = ['image/jpeg'];
-    if (!allowedTypes.includes(file.mimetype)) {
-        const error = new multer.MulterError('File type is not allowed, only JPEG/JPG is allowed');
-        error.message = 'File type is not allowed, only JPEG/JPG is allowed'
-        return cb(error, false);
-    }
-    cb(null, true);
-}
-
 const upload = multer({
     storage: storage,
-    fileFilter: fileFilter
 });
 const uploadd = upload.single('file')
 
 //tambah data therapy
 const addTherapy = async (req, res) => {
-    const id_user = req.session.id_user
+    const id_user = req.params.id_user
     const findUser = await User.findByPk(id_user)
     if (findUser) {
         const foto_psikolog = req.file
@@ -160,7 +149,7 @@ const addTherapy = async (req, res) => {
     } else {
         res.status(400).json({
             success: false,
-            message: 'Session Expired'
+            message: 'User not Found'
         })
     }
    

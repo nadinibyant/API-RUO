@@ -4,7 +4,7 @@ const controllers = require('../controllers/therapy')
 
 router.get('/allTherapy', controllers.allTherapy)
 router.get('/myTherapy/:id_user', controllers.myTherapy)
-router.post('/addTherapy', controllers.addTherapy)
+router.post('/addTherapy/:id_user', controllers.addTherapy)
 router.post('/editTherapy/:id_therapy', controllers.editTherapy)
 router.delete('/deleteTherapy/:id_therapy', controllers.deleteTherapy)
 router.get('/detailTherapy/:id_therapy', controllers.detailTherapy)

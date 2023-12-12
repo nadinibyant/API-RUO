@@ -90,7 +90,7 @@ const login = async (req, res) => {
                     res.status(400).json({
                         success: false,
                         message: 'Your password is wrong'
-                    })
+                    })  
                 } else {
                     const token = jwt.sign({
                             id_user: id_user

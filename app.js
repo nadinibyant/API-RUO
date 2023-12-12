@@ -5,23 +5,29 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const session = require('express-session')
 const server = require('./routes/index')
+const fs = require('fs').promises;
 const multer = require('multer')
+const cors = require('cors')
 
 var app = express();
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+// Route untuk menampilkan daftar file dan folder di dalam "public"
 app.use(session({
   secret: 'secret-key',
   resave: false,
   saveUninitialized: true,
 }))
 app.use(cookieParser());
+app.set('view engine', false);
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/fotoPsikolog', express.static('public/images/therapy'));
+app.use(cors({
+  origin: 'http://localhost:3000'
+}))
 
 app.use('/', server.users);
 app.use('/', server.therapy)
