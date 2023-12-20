@@ -6,28 +6,26 @@ const Comment = require('../models/comment')
 const controllers = {}
 
 const verifyToken = (req, res, next) => {
-    const token = req.cookies.token;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized: No token provided'
+        });
+    }
+
+    const token = authHeader.split(' ')[1]
 
     if (!token) {
-        // return res.redirect('/login');
-        res.status(404).json({
+        return res.status(401).json({
             success: false,
-            message: 'Session Token Has Expired'
-        })
+            message: 'Unauthorized: No token provided'
+        });
     }
-
-    try {
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        req.user = decoded.id_user;
-        next();
-    } catch (error) {
-        // return res.redirect('/login');
-        res.status(404).json({
-            success: false,
-            message: 'Session Token Has Expired'
-        })
-    }
+    next();
 };
+
 
 const getAllMessage = async (req,res) => {
     const allMessage = await Message.findAll()
@@ -79,7 +77,7 @@ const getAccount = async (req,res) => {
 controllers.getAccount = [verifyToken, getAccount]
 
 const addComment = async (req,res) => {
-    const id_user = req.session.id_user
+    const id_user = req.params.id_user
     const findUser = await User.findByPk(id_user)
     if (findUser) {
         const id_message = req.params.id_message

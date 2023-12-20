@@ -8,32 +8,29 @@ const Comment = require('../models/comment')
 const controllers = {}
 
 const verifyToken = (req, res, next) => {
-    const token = req.cookies.token;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized: No token provided'
+        });
+    }
+
+    const token = authHeader.split(' ')[1]
 
     if (!token) {
-        // return res.redirect('/login');
-        res.status(404).json({
+        return res.status(401).json({
             success: false,
-            message: 'Session Token Has Expired'
-        })
+            message: 'Unauthorized: No token provided'
+        });
     }
-
-    try {
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        req.user = decoded.id_user;
-        next();
-    } catch (error) {
-        // return res.redirect('/login');
-        res.status(404).json({
-            success: false,
-            message: 'Session Token Has Expired'
-        })
-    }
+    next();
 };
 
 // tampil data user aktif
 const getDataUser = async (req,res) => {
-    const id_user = req.session.id_user
+    const id_user = req.params.id_user
     const findUser = await User.findByPk(id_user)
     if (findUser) {
         res.status(200).json({
@@ -44,7 +41,7 @@ const getDataUser = async (req,res) => {
     } else {
         res.status(400).json({
             success: false,
-            message: 'Session Expired'
+            message: 'User not found'
         })
     }
 }
@@ -59,25 +56,15 @@ const storage = multer.diskStorage({
     }
 })
 
-const fileFilter = function (req, file, cb) {
-    const allowedTypes = ['image/jpeg'];
-    if (!allowedTypes.includes(file.mimetype)) {
-        const error = new multer.MulterError('File type is not allowed, only JPEG/JPG is allowed');
-        error.message = 'File type is not allowed, only JPEG/JPG is allowed'
-        return cb(error, false);
-    }
-    cb(null, true);
-}
 
 const upload = multer({
     storage: storage,
-    fileFilter: fileFilter
 });
 const uploadd = upload.single('file')
 
 // edit profile
 const editProfile = async (req,res) => {
-    const id_user = req.session.id_user
+    const id_user = req.params.id_user
     const findUser = await User.findByPk(id_user)
     if (findUser) {
         const foto_user = req.file
@@ -165,7 +152,7 @@ controllers.editProfile = [verifyToken,uploadd,editProfile]
 
 // tampil semua message user yg pernah di upload
 const getMyMessage = async (req,res) => {
-    const id_user = req.session.id_user
+    const id_user = req.params.id_user
     const findUser = await User.findByPk(id_user)
     if (findUser) {
         const findMyMessage = await Message.findAll({
@@ -325,7 +312,7 @@ controllers.deleteMyMessage = [verifyToken, deleteMyMessage]
 
 //tambah message
 const addMessage = async (req,res) => {
-    const id_user = req.session.id_user
+    const id_user = req.params.id_user
     const findUser = await User.findByPk(id_user)
     if (findUser) {
         const isi_message = req.body.isi_message

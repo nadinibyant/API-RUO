@@ -30,14 +30,6 @@ const Therapy = sequelize.define('therapy', {
         type: DataTypes.STRING,
         allowNull: true
     }, 
-    like:{
-        type: DataTypes.INTEGER,
-        allowNull: true
-    },
-    dislike:{
-        type: DataTypes.INTEGER,
-        allowNull: true
-    },
     spesialis_psikolog: {
         type: DataTypes.STRING,
         allowNull: false

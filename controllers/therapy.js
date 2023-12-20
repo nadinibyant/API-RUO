@@ -3,6 +3,8 @@ const Therapy = require('../models/therapy')
 const User = require('../models/users')
 const controllers = {}
 const jwt = require('jsonwebtoken')
+const Like = require('../models/like')
+const Dislike = require('../models/dislike')
 const multer = require('multer')
 const path = require('path')
 const Sequelize = require('sequelize')
@@ -276,33 +278,55 @@ controllers.detailTherapy = [verifyToken, detailTherapy]
 //tambah like
 const like = async (req, res) => {
     const id_therapy = req.params.id_therapy
+    const id_user_like = req.params.id_user
     const findTherapy = await Therapy.findOne({
         where: {
             id_therapy: id_therapy
         }
     })
     if (findTherapy) {
-        var like = findTherapy.like
-        var intLike = parseInt(like)
-        intLike = intLike + 1
+        var id_user_therapy = findTherapy.id_user
 
-        const updateTherapy = await Therapy.update({
-            like: intLike
-        }, {
+        const findLike = await Like.findOne({
             where: {
-                id_therapy: id_therapy
+                id_therapy: id_therapy,
+                id_user: id_user_like
             }
         })
-        if (updateTherapy) {
-            res.status(200).json({
-                success: true,
-                message: 'The therapy data was successfully liked'
+        if (findLike) {
+            const hapusLike = await Like.destroy({
+                where: {
+                    id_like: findLike.id_like
+                }
             })
-        } else {
-            res.status(400).json({
-                success: false,
-                message: 'Therapy data failed to like'
+            if (hapusLike) {
+                res.status(200).json({
+                    success: true,
+                    message: 'Unlike success'
+                })
+            } else {
+                res.status(400).json({
+                    success: false,
+                    message: 'unlike was not successful'
+                })
+            }
+        } else{
+            const addLike = await Like.create({
+                id_therapy: id_therapy,
+                id_user: id_user_like,
             })
+            if (addLike) {
+                res.status(200).json({
+                    success: true,
+                    message: 'The therapy data was successfully liked',
+                    id_user_therapy: id_user_therapy
+                })
+            } else {
+                res.status(400).json({
+                    success: false,
+                    message: 'Therapy data failed to like'
+                })
+            }
         }
     } else {
         res.status(400).json({
@@ -314,36 +338,80 @@ const like = async (req, res) => {
 }
 controllers.like = [verifyToken, like]
 
+const tampiLike = async (req,res) => {
+    const id_therapy = req.params.id_therapy
+    const findLike = await Like.findAll({
+        where: {
+            id_therapy: id_therapy
+        }
+    })
+    if (findLike) {
+        res.status(200).json({
+            success: true,
+            message: 'Data like found',
+            data: findLike,
+            jumlahLike: findLike.length
+        })
+    } else {
+        res.status(400).json({
+            success: false,
+            message: 'Data like not found'
+        })
+    }
+}
+controllers.tampiLike = [verifyToken, tampiLike] 
+
 //tambah dislike
 const dislike = async (req, res) => {
     const id_therapy = req.params.id_therapy
+    const id_user_dislike = req.params.id_user
     const findTherapy = await Therapy.findOne({
         where: {
             id_therapy: id_therapy
         }
     })
     if (findTherapy) {
-        var dislike = findTherapy.dislike
-        var intDislike = parseInt(dislike)
-        intDislike = intDislike + 1
-
-        const updateTherapy = await Therapy.update({
-            dislike: intDislike
-        }, {
+        const findDislike = await Dislike.findOne({
             where: {
-                id_therapy: id_therapy
+                id_therapy:id_therapy,
+                id_user:id_user_dislike
             }
         })
-        if (updateTherapy) {
-            res.status(200).json({
-                success: true,
-                message: 'The therapy data was successfully disliked'
+        if (findDislike) {
+            const hapusDislike = await Dislike.destroy({
+                where: {
+                    id_dislike: findDislike.id_dislike
+                }
             })
+            if (hapusDislike) {
+                res.status(200).json({
+                    success: true,
+                    message: 'Dislike has been successfully cancelled',
+                    id_user_therapy: findTherapy.id_user
+                })
+            } else {
+                res.status(400).json({
+                    success: false,
+                    message: 'Dislike was not successfully canceled'
+                })
+            }
         } else {
-            res.status(400).json({
-                success: false,
-                message: 'Therapy data failed to dislike'
+            const addDislike = await Dislike.create({
+                id_therapy: id_therapy,
+                id_user: id_user_dislike
             })
+            if (addDislike) {
+                res.status(200).json({
+                    success: true,
+                    message: 'Successfully added dislike',
+                    id_user_therapy: findTherapy.id_user
+                })
+            } else {
+                res.status(400).json({
+                    success: false,
+                    message: 'Failed to add dislike'
+                })
+            }
         }
     } else {
         res.status(400).json({
@@ -351,9 +419,32 @@ const dislike = async (req, res) => {
             message: 'Therapy not found'
         })
     }
-
+   
 }
 controllers.dislike = [verifyToken, dislike]
+
+const tampilDislike = async (req,res) => {
+    const id_therapy = req.params.id_therapy
+    const findDislike = await Dislike.findAll({
+        where: {
+            id_therapy: id_therapy
+        }
+    })
+    if (findDislike) {
+        res.status(200).json({
+            success: true,
+            message: 'Data dislike found',
+            data: findDislike,
+            jumlahDislike: findDislike.length
+        })
+    } else {
+        res.status(400).json({
+            success: false,
+            message: 'Data dislike not found'
+        })
+    }
+}
+controllers.tampilDislike = tampilDislike
 
 //hapus therapy jika dislike > 10
 const deleteOtomatic = async (req,res) => {

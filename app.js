@@ -28,6 +28,7 @@ app.use('/fotoPsikolog', express.static('public/images/therapy'));
 app.use(cors({
   origin: 'http://localhost:3000'
 }))
+app.use('/fotoProfile', express.static('public/images/profile'));
 
 app.use('/', server.users);
 app.use('/', server.therapy)
