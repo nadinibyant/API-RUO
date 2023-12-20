@@ -42,6 +42,14 @@ const Therapy = sequelize.define('therapy', {
             key: 'id_user'
         }
     }, 
+    like: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    }, 
+    dislike: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
     created_at:{
         type: DataTypes.DATE,
         allowNull: false
