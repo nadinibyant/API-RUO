@@ -10,9 +10,12 @@ router.delete('/deleteTherapy/:id_therapy', controllers.deleteTherapy)
 router.get('/detailTherapy/:id_therapy', controllers.detailTherapy)
 router.post('/like/:id_therapy/:id_user', controllers.like)
 router.post('/dislike/:id_therapy/:id_user', controllers.dislike)
-router.delete('/delOtomatic', controllers.deleteOtomatic)
+// router.delete('/delOtomatic', controllers.deleteOtomatic)
 router.get('/tampilLike/:id_therapy', controllers.tampiLike)
 router.get('/tampilDislike/:id_therapy', controllers.tampilDislike)
+router.get('/readyLike/:id_user/:id_therapy', controllers.findLike)
+router.get('/readyDislike/:id_user/:id_therapy', controllers.findDislike)
+router.get('/geocode/:id_therapy', controllers.geocode)
 
 
 module.exports = router

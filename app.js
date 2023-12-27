@@ -29,6 +29,7 @@ app.use(cors({
   origin: 'http://localhost:3000'
 }))
 app.use('/fotoProfile', express.static('public/images/profile'));
+app.use('/logo', express.static('public/images/imgRuo'));
 
 app.use('/', server.users);
 app.use('/', server.therapy)

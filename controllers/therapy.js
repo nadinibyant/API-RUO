@@ -9,6 +9,14 @@ const multer = require('multer')
 const path = require('path')
 const Sequelize = require('sequelize')
 const Op = Sequelize.Op
+const axios = require('axios')
+const admin = require('firebase-admin')
+const serviceAccount = require('../ruo-application-firebase-adminsdk-tq4bz-eff4976190.json')
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+})
+
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -106,8 +114,9 @@ const addTherapy = async (req, res) => {
         const no_telp_psikolog = req.body.no_telp_psikolog
         const medsos_psikolog = req.body.medsos_psikolog
         const spesialis_psikolog = req.body.spesialis_psikolog
+        const alamat_lengkap = req.body.alamat_lengkap
 
-        if (!foto_psikolog || !nama_psikolog || !lama_karir || !no_telp_psikolog || !medsos_psikolog || !spesialis_psikolog) {
+        if (!foto_psikolog || !nama_psikolog || !lama_karir || !no_telp_psikolog || !medsos_psikolog || !spesialis_psikolog || !alamat_lengkap) {
             res.status(400).json({
                 success: false,
                 message: 'Complete the therapy data you want to add'
@@ -125,27 +134,39 @@ const addTherapy = async (req, res) => {
                     message: `Therapy data with that name ${nama_psikolog} has been added`
                 })
             } else {
-                const addTherapy = await Therapy.create({
-                    foto_psikolog: foto_psikolog.originalname,
-                    nama_psikolog: nama_psikolog,
-                    lama_karir: lama_karir,
-                    no_telp_psikolog: no_telp_psikolog,
-                    medsos_psikolog: medsos_psikolog,
-                    spesialis_psikolog: spesialis_psikolog,
-                    id_user: id_user
-                })
+                const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alamat_lengkap)}`)
 
-                if (addTherapy) {
-                    res.status(200).json({
-                        success: true,
-                        message: 'Therapy data added successfully'
+                if (response.data && response.data.length > 0) {
+                    const addTherapy = await Therapy.create({
+                        foto_psikolog: foto_psikolog.originalname,
+                        nama_psikolog: nama_psikolog,
+                        lama_karir: lama_karir,
+                        no_telp_psikolog: no_telp_psikolog,
+                        medsos_psikolog: medsos_psikolog,
+                        spesialis_psikolog: spesialis_psikolog,
+                        id_user: id_user,
+                        alamat_lengkap: alamat_lengkap
                     })
+
+                    if (addTherapy) {
+                        res.status(200).json({
+                            success: true,
+                            message: 'Therapy data added successfully'
+                        })
+                    } else {
+                        res.status(400).json({
+                            success: false,
+                            message: 'Therapy data was not added successfully'
+                        })
+                    }
                 } else {
-                    res.status(400).json({
+                    res.status(404).json({
                         success: false,
-                        message: 'Therapy data was not added successfully'
+                        message: 'Location not found'
                     })
                 }
+
+
             }
         }
     } else {
@@ -175,6 +196,7 @@ const editTherapy = async (req, res) => {
         const no_telp_psikolog = req.body.no_telp_psikolog || findTherapy.no_telp_psikolog
         const medsos_psikolog = req.body.medsos_psikolog || findTherapy.medsos_psikolog
         const spesialis_psikolog = req.body.spesialis_psikolog || findTherapy.spesialis_psikolog
+        const alamat_lengkap = req.body.alamat_lengkap || findTherapy.alamat_lengkap
 
         var foto
         if (foto_psikolog) {
@@ -189,7 +211,8 @@ const editTherapy = async (req, res) => {
             lama_karir: lama_karir,
             no_telp_psikolog: no_telp_psikolog,
             medsos_psikolog: medsos_psikolog,
-            spesialis_psikolog: spesialis_psikolog
+            spesialis_psikolog: spesialis_psikolog,
+            alamat_lengkap: alamat_lengkap
         }, {
             where: {
                 id_therapy: id_therapy
@@ -320,7 +343,7 @@ const like = async (req, res) => {
                         message: 'unlike was not successful'
                     })
                 }
-                
+
             } else {
                 res.status(400).json({
                     success: false,
@@ -435,7 +458,7 @@ const dislike = async (req, res) => {
                         message: 'Dislike was not successfully canceled'
                     })
                 }
-                
+
             } else {
                 res.status(400).json({
                     success: false,
@@ -450,25 +473,83 @@ const dislike = async (req, res) => {
             if (addDislike) {
                 const dislikeTherapy = findTherapy.dislike
                 const dislike = dislikeTherapy + 1
-                const updateDislike = await Therapy.update({
-                    dislike: dislike
-                }, {
-                    where: {
-                        id_therapy: id_therapy
+                if (dislike > 10) {
+                    const hapusTherapy = await Therapy.destroy({
+                        where: {
+                            id_therapy: id_therapy
+                        }
+                    })
+                    if (hapusTherapy) {
+                        const id_user_therapy = findTherapy.id_user
+                        const findUser = await User.findOne({
+                            where: {
+                                id_user: id_user_therapy
+                            }
+                        })
+                        if (findUser) {
+                            const fcmToken = findUser.fcmToken
+                            const messaging = admin.messaging()
+
+                            const message = {
+                                token: fcmToken,
+                                notification: {
+                                    title: 'Therapy Data Deleted!!!',
+                                    body: 'therapy data was deleted because dislikes exceeded 10'
+                                },
+                            }
+
+                            messaging.send(message)
+                                .then(response => {
+                                    console.log('Notifikasi terkirim:', response);
+                                    res.status(200).json({
+                                        success: true,
+                                        message: 'therapy data was deleted because dislikes exceeded 10'
+                                    })
+                                })
+                                .catch(error => {
+                                    console.error('Gagal mengirim notifikasi:', error);
+                                    res.status(400).json({
+                                        success: false,
+                                        message: 'gagal'
+                                    })
+                                });
+
+
+                        } else {
+                            res.status(400).json({
+                                success: false,
+                                message: 'user not found'
+                            })
+                        }
+
+                    } else {
+                        res.status(400).json({
+                            success: false,
+                            message: 'failed to delete'
+                        })
                     }
-                })
-                if (updateDislike) {
-                    res.status(200).json({
-                        success: true,
-                        message: 'Successfully added dislike',
-                        id_user_therapy: findTherapy.id_user
-                    })
                 } else {
-                    res.status(400).json({
-                        success: false,
-                        message: 'Failed to add dislike'
+                    const updateDislike = await Therapy.update({
+                        dislike: dislike
+                    }, {
+                        where: {
+                            id_therapy: id_therapy
+                        }
                     })
+                    if (updateDislike) {
+                        res.status(200).json({
+                            success: true,
+                            message: 'Successfully added dislike',
+                            id_user_therapy: findTherapy.id_user
+                        })
+                    } else {
+                        res.status(400).json({
+                            success: false,
+                            message: 'Failed to add dislike'
+                        })
+                    }
                 }
+
 
             } else {
                 res.status(400).json({
@@ -510,30 +591,90 @@ const tampilDislike = async (req, res) => {
 }
 controllers.tampilDislike = tampilDislike
 
-//hapus therapy jika dislike > 10
-const deleteOtomatic = async (req, res) => {
-    const delTherapy = await Therapy.destroy({
+
+
+const findLike = async (req, res) => {
+    const id_user = req.params.id_user
+    const id_therapy = req.params.id_therapy
+    const findDataLike = await Like.findOne({
         where: {
-            dislike: {
-                [Op.or]: {
-                    [Op.eq]: 10,
-                    [Op.gt]: 10
-                }
-            }
+            id_user: id_user,
+            id_therapy: id_therapy
         }
     })
-    if (delTherapy) {
+    if (findDataLike) {
         res.status(200).json({
             success: true,
-            message: 'Therapy data has been successfully deleted'
+            message: 'Like found'
         })
     } else {
         res.status(400).json({
             success: false,
-            message: 'Therapy data was not successfully deleted'
+            message: 'Like not found'
         })
     }
 }
-controllers.deleteOtomatic = [verifyToken, deleteOtomatic]
+controllers.findLike = [verifyToken, findLike]
+
+const findDislike = async (req, res) => {
+    const id_user = req.params.id_user
+    const id_therapy = req.params.id_therapy
+    const findDislike = await Dislike.findOne({
+        where: {
+            id_user: id_user,
+            id_therapy: id_therapy
+        }
+    })
+    if (findDislike) {
+        res.status(200).json({
+            success: true,
+            message: 'Dislike found'
+        })
+    } else {
+        res.status(400).json({
+            success: false,
+            message: 'Dislike not found'
+        })
+    }
+}
+controllers.findDislike = [verifyToken, findDislike]
+
+const geocode = async (req, res) => {
+    const id_therapy = req.params.id_therapy
+    const findTherapy = await Therapy.findOne({
+        where: {
+            id_therapy: id_therapy
+        }
+    })
+    if (findTherapy) {
+        const alamat_lengkap = findTherapy.alamat_lengkap
+        const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alamat_lengkap)}`)
+
+        if (response.data && response.data.length > 0) {
+            const location = {
+                latitude: parseFloat(response.data[0].lat),
+                longitude: parseFloat(response.data[0].lon),
+            }
+            res.status(200).json({
+                success: true,
+                message: 'location found',
+                location: location,
+                data: findTherapy
+            })
+
+        } else {
+            res.status(404).json({
+                error: 'Location not found'
+            })
+        }
+
+    } else {
+        res.status(400).json({
+            success: false,
+            message: 'Data Therapy not found'
+        })
+    }
+}
+controllers.geocode = [verifyToken, geocode]
 
 module.exports = controllers

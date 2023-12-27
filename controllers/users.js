@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken')
 const controllers = {}
 
 
+
+
 //register
 const register = async (req, res) => {
     const username = req.body.username
@@ -69,6 +71,7 @@ controllers.register = register
 const login = async (req, res) => {
     const username = req.body.username
     const password = req.body.password
+    const token = req.body.token
 
     if (!username || !password) {
         res.status(400).json({
@@ -90,31 +93,46 @@ const login = async (req, res) => {
                     res.status(400).json({
                         success: false,
                         message: 'Your password is wrong'
-                    })  
-                } else {
-                    const token = jwt.sign({
-                            id_user: id_user
-                        },
-                        process.env.ACCESS_TOKEN_SECRET, {
-                            expiresIn: '10h'
-                        }
-                    )
-
-                    req.session.id_user = id_user
-                    res.cookie('token', token, {
-                        httpOnly: true,
-                        secure: true,
-                        maxAge: 2 * 60 * 60 * 1000,
-                    });
-
-                    res.header('Authorization', `Bearer ${token}`);
-
-                    res.status(200).json({
-                        success: true,
-                        message: 'Login successful',
-                        token: token,
-                        id_user: id_user
                     })
+                } else {
+                    const update = await User.update({
+                        fcmToken: token
+                    }, {
+                        where: {
+                            id_user: id_user
+                        }
+                    })
+                    if (update) {
+                        const token = jwt.sign({
+                                id_user: id_user
+                            },
+                            process.env.ACCESS_TOKEN_SECRET, {
+                                expiresIn: '10h'
+                            }
+                        )
+
+                        req.session.id_user = id_user
+                        res.cookie('token', token, {
+                            httpOnly: true,
+                            secure: true,
+                            maxAge: 2 * 60 * 60 * 1000,
+                        });
+
+                        res.header('Authorization', `Bearer ${token}`);
+
+                        res.status(200).json({
+                            success: true,
+                            message: 'Login successful',
+                            token: token,
+                            id_user: id_user
+                        })
+                    } else {
+                        res.status(400).json({
+                            success: false,
+                            messaging: 'Token fcm tidak ada'
+                        })
+                    }
+
                 }
             })
         } else {
@@ -127,7 +145,7 @@ const login = async (req, res) => {
 }
 controllers.login = login
 
-const forgetPassword = async (req,res) => {
+const forgetPassword = async (req, res) => {
     const email = req.body.email
     const newPass = req.body.newPass
     const confNewPass = req.body.confNewPass
@@ -151,7 +169,7 @@ const forgetPassword = async (req,res) => {
                 const updatePass = await User.update({
                     password: hashedPass
                 }, {
-                    where:{
+                    where: {
                         email: email
                     }
                 })

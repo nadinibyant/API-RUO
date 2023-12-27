@@ -42,6 +42,10 @@ const Therapy = sequelize.define('therapy', {
             key: 'id_user'
         }
     }, 
+    alamat_lengkap: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     like: {
         type: DataTypes.INTEGER,
         allowNull: true
