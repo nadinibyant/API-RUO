@@ -39,7 +39,7 @@ const User = sequelize.define('user', {
     },
     fcmToken:{
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     created_at:{
         type: DataTypes.DATE,
